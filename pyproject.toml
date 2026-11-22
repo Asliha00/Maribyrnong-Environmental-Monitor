@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 # (it ignores requirements.txt when pyproject.toml exists). Pinned for reproducible
 # builds (SEC-26); Dependabot proposes upgrades. Local: pip install -e ".[dev]"
 dependencies = [
-    "fastapi==0.162.0",
+    "fastapi==0.165.0",
     "uvicorn[standard]==0.54.0",
     "pydantic==2.14.1",
     "pydantic-settings==2.16.1",
