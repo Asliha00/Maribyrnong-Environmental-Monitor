@@ -16,7 +16,7 @@ dependencies = [
     "cryptography==50.0.2",
     "argon2-cffi==25.1.0",   # SEC-04 password hashing (argon2id)
     "pyjwt==2.15.1",         # SEC-08 access/refresh tokens
-    "pyotp==2.10.0",         # SEC-07 TOTP MFA
+    "pyotp==2.12.1",         # SEC-07 TOTP MFA
     "segno==1.6.6",          # SEC-07 QR code for MFA enrolment (pure Python)
     # Shared with data_pipeline/ (db.py imports pandas; storage.py uses vercel)
     "pandas==3.1.0",
