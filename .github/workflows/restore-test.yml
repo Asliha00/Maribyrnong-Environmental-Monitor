@@ -1,0 +1,66 @@
+# SEC-18 restore test (BUILD_PROMPT: test a restore before the progress report and again
+# before final submission). Run by hand: Actions -> restore-test -> Run workflow.
+# It makes a fresh encrypted backup of production with the read-only backup_user, restores it
+# into a SCRATCH Neon branch, and compares row counts table by table (database/backup/*.sh).
+#
+# Required repository secrets:
+#   BACKUP_DATABASE_URL    backup_user, production DIRECT host (also used by nightly-backup)
+#   BACKUP_ENCRYPTION_KEY  same key as nightly-backup
+#   SCRATCH_DATABASE_URL   restore_user on a throwaway scratch branch, DIRECT host. NEVER main or dev:
+#                          the restore drops schema app on this database.
+name: restore-test
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  restore:
+    runs-on: ubuntu-24.04   # pinned: the PGDG apt repo (PostgreSQL 18 client) can lag a new Ubuntu release
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Refuse to run without a scratch target
+        env:
+          SCRATCH_DATABASE_URL: ${{ secrets.SCRATCH_DATABASE_URL }}
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          test -n "$SCRATCH_DATABASE_URL" || { echo "::error::SCRATCH_DATABASE_URL secret not set"; exit 1; }
+          # Same host as the backup source would mean restoring over production
+          src_host=$(echo "$BACKUP_DATABASE_URL" | sed -E 's|.*@([^/:?]+).*|\1|')
+          dst_host=$(echo "$SCRATCH_DATABASE_URL" | sed -E 's|.*@([^/:?]+).*|\1|')
+          test "$src_host" != "$dst_host" || { echo "::error::scratch target is the production host"; exit 1; }
+      - name: Check secret formats (no 'NAME=' prefix, no quotes, postgresql:// URLs)
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+          SCRATCH_DATABASE_URL: ${{ secrets.SCRATCH_DATABASE_URL }}
+        run: bash .github/scripts/check_secrets.sh BACKUP_DATABASE_URL BACKUP_ENCRYPTION_KEY SCRATCH_DATABASE_URL
+      - name: Install PostgreSQL 18 client (Neon runs 18.6)
+        run: |
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-18
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
+      - name: Create encrypted backup of production
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: database/backup/backup.sh backups
+      - name: Restore into scratch branch and compare row counts
+        env:
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+          SCRATCH_DATABASE_URL: ${{ secrets.SCRATCH_DATABASE_URL }}
+          SOURCE_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          set -o pipefail
+          {
+            echo "Restore test $(date -u +%Y-%m-%dT%H:%M:%SZ), commit ${GITHUB_SHA::7}, run ${GITHUB_RUN_ID}"
+            echo "pg_restore: $(pg_restore --version)"
+            ls -l backups/
+            database/backup/restore_test.sh backups/*.dump.enc
+          } 2>&1 | tee restore_test.log
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: restore-test-log-${{ github.run_id }}
+          path: restore_test.log
+          retention-days: 90

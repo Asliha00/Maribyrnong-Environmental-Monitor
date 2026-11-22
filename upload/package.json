@@ -1,0 +1,25 @@
+{
+  "name": "maribyrnong-upload",
+  "private": true,
+  "description": "The only Node function: issues short-lived private Blob upload tokens to administrators (BUILD_PROMPT §4.5).",
+  "type": "module",
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vercel/blob": "2.8.2",
+    "hono": "4.13.13"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  },
+  "overrides": {
+    "zod": "4.6.7"
+  }
+}

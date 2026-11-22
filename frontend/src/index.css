@@ -1,0 +1,134 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+/*
+ * Chart tokens (data-viz reference palette, validated: docs in DECISIONS.md D-031).
+ * Charts use these roles, never raw hex, so light/dark swap in one place.
+ * Sensors take categorical slots in fixed order by sensor code (colour follows the
+ * sensor, never its rank); magnitude uses one blue ramp, light -> dark.
+ */
+:root {
+  --chart-surface: #fcfcfb;
+  --chart-ink: #0b0b0b;
+  --chart-ink-2: #52514e;
+  --chart-muted: #898781;
+  --chart-grid: #e1e0d9;
+  --chart-axis: #c3c2b7;
+  --chart-invalid: #b4b2a9;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #6250d6;
+  --series-8: #e34948;
+  --diverging-warm: #e34948; /* data-viz diverging pair: red (above) */
+  --diverging-cool: #2a78d6; /* blue (below); grey midpoint = --chart-muted */
+  --status-critical: #d03b3b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --chart-surface: #1a1a19;
+    --chart-ink: #f0efec;
+    --chart-ink-2: #c3c2b7;
+    --chart-muted: #898781;
+    --chart-grid: #2c2c2a;
+    --chart-axis: #383835;
+    --chart-invalid: #5f5e5a;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+    --diverging-warm: #e66767; /* data-viz diverging pair: red (above) */
+    --diverging-cool: #3987e5; /* blue (below); grey midpoint = --chart-muted */
+  }
+}
+
+/*
+ * Login page tokens (D-036). The page background matches each illustration's edge colour,
+ * so the artwork has no visible seam. Every text/background pair is AA (>= 4.5:1), checked
+ * in e2e/login.spec.ts.
+ */
+:root {
+  --login-page: #ebf3fe; /* = the light artwork's measured edge colour */
+  --login-glow: #ebf3fe; /* = page: the light artwork has no halo, so no glow (no seam) */
+  --login-card: #ffffff;
+  --login-card-border: #d5e2ef;
+  --login-accent: #037a85; /* label, link, button: 5.09:1 on white */
+  --login-accent-hover: #02656e;
+  --login-on-accent: #ffffff;
+  --login-heading: #0b1b3a;
+  --login-subtitle: #475569;
+  --login-label: #0b1b3a;
+  --login-input: #ffffff;
+  --login-input-border: #b8c6d6;
+  --login-input-text: #0b1b3a;
+  --login-shadow: rgb(15 40 80 / 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --login-page: #040e25;
+    --login-glow: #040e25; /* = page: the transparent artwork carries its own glow */
+    --login-card: #101a30;
+    --login-card-border: #23466c;
+    --login-accent: #18d8e8; /* label, link: 9.92:1 on the card */
+    --login-accent-hover: #5fe6f1;
+    --login-on-accent: #040e25; /* button text: 10.99:1 on cyan */
+    --login-heading: #f4f7fc;
+    --login-subtitle: #94a8c4;
+    --login-label: #ffffff;
+    --login-input: #0a1428;
+    --login-input-border: #2e4a6b;
+    --login-input-text: #f4f7fc;
+    --login-shadow: rgb(0 0 0 / 0.35); /* the card has no border in dark mode */
+  }
+}
+
+@theme inline {
+  --color-login-page: var(--login-page);
+  --color-login-glow: var(--login-glow);
+  --color-login-card: var(--login-card);
+  --color-login-card-border: var(--login-card-border);
+  --color-login-accent: var(--login-accent);
+  --color-login-accent-hover: var(--login-accent-hover);
+  --color-login-on-accent: var(--login-on-accent);
+  --color-login-heading: var(--login-heading);
+  --color-login-subtitle: var(--login-subtitle);
+  --color-login-label: var(--login-label);
+  --color-login-input: var(--login-input);
+  --color-login-input-border: var(--login-input-border);
+  --color-login-input-text: var(--login-input-text);
+  --color-login-shadow: var(--login-shadow);
+}
+
+/* Login illustration: a soft straight-edge feather that fades only the background margin
+   around the artwork, so its own outline is kept (no oval crop). */
+.login-art-mask {
+  mask-image:
+    linear-gradient(to right, transparent, #000 7%, #000 93%, transparent),
+    linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+  mask-composite: intersect;
+}
+
+/* Dark: no mask. The dark artwork has a transparent background
+   (scripts/make_login_dark_art.py), so it blends without fading the cityscape. */
+@media (prefers-color-scheme: dark) {
+  .login-art-mask {
+    mask-image: none;
+  }
+}
+
+/* Leaflet controls follow the app theme */
+.leaflet-container {
+  font: inherit;
+  background: var(--chart-surface);
+}

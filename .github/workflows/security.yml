@@ -1,0 +1,69 @@
+# SEC-16 / SEC-26 / SEC-13: secret scanning, dependency audits and the weekly
+# database posture check (proposal R20 "monthly posture scans" - we run weekly).
+name: security
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 20 * * 0"   # Sundays 20:00 UTC (Monday morning in Melbourne)
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0     # scan the whole history, not just the last commit
+      - name: Install gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
+            | tar -xz gitleaks
+      - run: ./gitleaks git --redact --verbose .
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: .python-version
+      - run: python -m pip install pip-audit==2.10.1
+      - name: pip-audit (fails on known vulnerabilities)
+        run: pip-audit .   # audits [project].dependencies in pyproject.toml
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: npm audit (fails on high/critical)
+        working-directory: frontend
+        run: npm audit --audit-level=high
+      - name: npm audit, upload service (fails on high/critical)
+        working-directory: upload
+        run: npm audit --audit-level=high
+
+  verify-database:
+    # Only on the schedule or by hand: it connects to the live Neon project.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      APP_DATABASE_URL: ${{ secrets.VERIFY_APP_DATABASE_URL }}
+      PIPELINE_DATABASE_URL: ${{ secrets.VERIFY_PIPELINE_DATABASE_URL }}
+      BACKUP_DATABASE_URL: ${{ secrets.VERIFY_BACKUP_DATABASE_URL }}
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+    steps:
+      - name: Skip until Neon secrets are configured
+        if: env.PIPELINE_DATABASE_URL == ''
+        run: echo "::notice::Neon secrets not set yet; verify_security.py skipped."
+      - uses: actions/checkout@v7
+        if: env.PIPELINE_DATABASE_URL != ''
+      - uses: actions/setup-python@v7
+        if: env.PIPELINE_DATABASE_URL != ''
+        with:
+          python-version-file: .python-version
+      - if: env.PIPELINE_DATABASE_URL != ''
+        run: bash .github/scripts/check_secrets.sh APP_DATABASE_URL PIPELINE_DATABASE_URL BACKUP_DATABASE_URL BLOB_READ_WRITE_TOKEN
+      - if: env.PIPELINE_DATABASE_URL != ''
+        run: |
+          python -m pip install -r data_pipeline/requirements.txt
+          python database/verify_security.py

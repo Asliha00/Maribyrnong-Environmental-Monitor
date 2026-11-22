@@ -1,0 +1,14 @@
+# gitleaks configuration (SEC-16). Loaded automatically from the repo root.
+# Keeps every default rule; adds one narrow allow-list (DECISIONS.md D-027).
+[extend]
+useDefault = true
+
+# Invented test passphrases such as "Tram-Lantern-Quartz-58" in test code.
+# BOTH conditions must hold, so a real key in a test file, or a passphrase
+# anywhere else in the repository, is still reported.
+[[allowlists]]
+description = "Invented Word-Word-Word-NN test passphrases inside test directories"
+condition = "AND"
+paths = ['''^backend/tests/''', '''^e2e/''']
+regexTarget = "secret"
+regexes = ['''^[A-Z][a-z]+-[A-Z][a-z]+-[A-Z][a-z]+-[0-9]{2}$''']

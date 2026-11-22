@@ -1,0 +1,20 @@
+{
+  "light": {
+    "main section > p:first-child": 5.09,
+    "h1": 17.04,
+    "h1 + p": 7.58,
+    "label[for=email]": 17.04,
+    "label[for=password]": 17.04,
+    "button[aria-controls=forgot-help]": 5.09,
+    "button[type=submit]": 5.09
+  },
+  "dark": {
+    "main section > p:first-child": 9.92,
+    "h1": 16.13,
+    "h1 + p": 7.14,
+    "label[for=email]": 17.32,
+    "label[for=password]": 17.32,
+    "button[aria-controls=forgot-help]": 9.92,
+    "button[type=submit]": 10.99
+  }
+}

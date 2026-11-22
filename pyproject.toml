@@ -1,0 +1,73 @@
+[project]
+name = "maribyrnong-environmental-monitor"
+version = "0.1.0"
+description = "Environmental Equity, Urban Heat & Air Quality dashboard for Maribyrnong City Council (NIT3004 capstone)"
+requires-python = ">=3.12"
+# Single dependency manifest: Vercel installs [project].dependencies from this file
+# (it ignores requirements.txt when pyproject.toml exists). Pinned for reproducible
+# builds (SEC-26); Dependabot proposes upgrades. Local: pip install -e ".[dev]"
+dependencies = [
+    "fastapi==0.162.0",
+    "uvicorn[standard]==0.54.0",
+    "pydantic==2.14.1",
+    "pydantic-settings==2.16.1",
+    "psycopg[binary]==3.3.6",
+    "psycopg-pool==3.3.3",
+    "cryptography==50.0.2",
+    "argon2-cffi==25.1.0",   # SEC-04 password hashing (argon2id)
+    "pyjwt==2.15.1",         # SEC-08 access/refresh tokens
+    "pyotp==2.10.0",         # SEC-07 TOTP MFA
+    "segno==1.6.6",          # SEC-07 QR code for MFA enrolment (pure Python)
+    # Shared with data_pipeline/ (db.py imports pandas; storage.py uses vercel)
+    "pandas==3.1.0",
+    "numpy==2.5.4",
+    "tabulate==0.10.0",
+    "vercel==0.12.1",
+    # UC3 PDF export (BUILD_PROMPT §2). Pillow pinned explicitly: 13.0.0 fixes CVEs in 12.x
+    "reportlab==5.0.1",
+    "matplotlib==3.11.2",
+    "pillow==13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+    "pytest-cov==7.1.0",
+    "httpx==0.28.1",
+    "ruff==0.17.3",
+    "pip-audit==2.10.1",
+    "pyyaml==6.0.3",
+    "pypdf==6.21.4",         # tests read exported PDFs; newest release is the only one without known CVEs
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+# The code runs from the repository root (pytest pythonpath / Vercel entrypoint),
+# so installing the project only installs its dependencies, not any packages.
+[tool.setuptools]
+packages = []
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["backend/tests", "data_pipeline/tests", "database/tests", "tests"]
+
+[tool.coverage.run]
+source = ["backend/app"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["frontend", ".venv"]
+
+[tool.ruff.lint]
+# S = flake8-bandit security rules, incl. S608 (SQL built from strings, SEC-19)
+select = ["E", "F", "W", "I", "B", "S", "UP"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI declares dependencies as argument defaults by design
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.params.Depends", "fastapi.params.Query"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101", "S105", "S106"]   # asserts and test passwords are expected in tests

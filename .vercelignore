@@ -1,0 +1,14 @@
+# Never upload secrets, local environments or council data with `vercel deploy`
+.env
+.env.*
+!.env.example
+.venv/
+**/node_modules/
+frontend/dist/
+data/raw/*.csv
+data/processed/*.db*
+data/processed/*.csv
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/

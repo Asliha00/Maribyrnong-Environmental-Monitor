@@ -1,0 +1,7 @@
+sensor_code,sensor_name,file_match,device_family,land_use,latitude,longitude,location_verified,installation_date,status,notes,sensitive_receptor
+MCC-01,MCC Air Quality Unit 1,mcc---1_1_device,mcc_aq,Transport corridor,-37.8010,144.8890,0,,Active,Location not in raw export - confirm with council. Hardware ID 863663063792742,0
+MCC-02,MCC Air Quality Unit 2,mcc---2_1_device,mcc_aq,Industrial,-37.8140,144.8880,0,,Active,Location not in raw export - confirm with council. Hardware ID 863663063738919,0
+FP-AMEN,Footscray Park - Amenities Block,footscray-park-amenities,libelium,Parkland,-37.7925,144.9020,0,,Active,Approximate coordinates - verify,0
+FP-LH,Footscray Park - Leeds/Hopkins,footscray-park-leeds-hopkins,libelium,Parkland,-37.7955,144.8985,0,,Active,Approximate coordinates - verify,0
+SALT-CC,Saltwater Childcare Centre,saltwater-childcare,libelium,Residential,-37.8060,144.8770,0,,Active,Approximate coordinates - verify. Sensitive receptor site (children),1
+NM-CT,Nicholson Mall Clock Tower,nicholson-mall-clock-tower,lora_r270,Commercial,-37.8003,144.8998,0,,Active,Approximate coordinates - verify. Temperature and pressure only,0

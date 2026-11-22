@@ -1,0 +1,9 @@
+# gitleaks findings reviewed and confirmed as false positives (DECISIONS.md D-023).
+# Ignore single findings by exact fingerprint only: never ignore whole files or rules.
+
+# .env.example line 27 in the initial commit: "JWT_SECRET=" is EMPTY. The generic-api-key
+# rule read across the line break and took the next line's variable name and help comment
+# ("MFA_ENCRYPTION_KEY=   # Fernet key: ...") as a value. Reviewed 2026-10-28.
+1dd4e806920c4f68f33e9932e9763ae6503407fd:.env.example:generic-api-key:27
+# Reviewed false positive (D-033): a made-up test value in a Vitest fixture, replaced in the next commit
+7841dbf26074adf9e2fb271da3bc6ca2038f111f:frontend/tests/admin.test.tsx:generic-api-key:202

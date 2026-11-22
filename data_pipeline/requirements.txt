@@ -1,0 +1,6 @@
+pandas>=2.1
+numpy>=1.26
+tabulate>=0.9
+psycopg[binary]>=3.1
+pytest>=8.0
+vercel>=0.12          # private Blob archive (optional for offline/SQLite use)

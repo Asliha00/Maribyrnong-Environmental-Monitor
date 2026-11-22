@@ -1,0 +1,38 @@
+# SEC-26 Patch applications: weekly update PRs for every ecosystem we use.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule: { interval: weekly }
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule: { interval: weekly }
+    groups:
+      dev-tooling:
+        dependency-type: development
+    # Major upgrades that need a deliberate decision first (DECISIONS.md D-006, D-021):
+    # BUILD_PROMPT section 2 specifies React 18; eslint-plugin-react (react/no-danger, SEC-22)
+    # does not support ESLint 10 yet. Minor and patch updates still arrive.
+    ignore:
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-router"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-leaflet"     # 5.x requires React 19 (DECISIONS.md D-031)
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: npm
+    directory: /upload
+    schedule: { interval: weekly }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }

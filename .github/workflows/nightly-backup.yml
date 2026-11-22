@@ -1,0 +1,50 @@
+# SEC-18 - Essential Eight "Regular backups": nightly encrypted backup of the Neon app schema.
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   BACKUP_DATABASE_URL    backup_user connection string, DIRECT (non-pooler) Neon host, ?sslmode=require
+#   BACKUP_ENCRYPTION_KEY  long random passphrase - ALSO store it in the team password manager,
+#                          without it the backups cannot be restored
+# Keep the repository PRIVATE. Artifacts are encrypted, but council data should not be public.
+name: nightly-backup
+on:
+  schedule:
+    - cron: "0 15 * * *"   # 15:00 UTC = 01:00/02:00 Melbourne
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  # Secrets cannot be tested in a job-level `if`, so a tiny job reports whether they exist.
+  # Until they are added, the backup is skipped instead of failing every night.
+  check-secrets:
+    runs-on: ubuntu-24.04   # pinned: the PGDG apt repo (PostgreSQL 18 client) can lag a new Ubuntu release
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - id: check
+        run: echo "configured=${{ secrets.BACKUP_DATABASE_URL != '' && secrets.BACKUP_ENCRYPTION_KEY != '' }}" >> "$GITHUB_OUTPUT"
+  backup:
+    needs: check-secrets
+    if: needs.check-secrets.outputs.configured == 'true'
+    runs-on: ubuntu-24.04   # pinned: the PGDG apt repo (PostgreSQL 18 client) can lag a new Ubuntu release
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check secret formats (no 'NAME=' prefix, no quotes, postgresql:// URLs)
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: bash .github/scripts/check_secrets.sh BACKUP_DATABASE_URL BACKUP_ENCRYPTION_KEY
+      - name: "Install PostgreSQL 18 client (must be >= the Neon server version, PostgreSQL 18.6 checked 2026-10-27)"
+        run: |
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-18
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
+      - name: Create encrypted backup
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: database/backup/backup.sh backups
+      - uses: actions/upload-artifact@v7
+        with:
+          name: neon-backup-${{ github.run_id }}
+          path: backups/
+          retention-days: 30
