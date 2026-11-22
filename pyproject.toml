@@ -24,7 +24,7 @@ dependencies = [
     "tabulate==0.10.0",
     "vercel==0.12.1",
     # UC3 PDF export (BUILD_PROMPT §2). Pillow pinned explicitly: 13.0.0 fixes CVEs in 12.x
-    "reportlab==5.0.1",
+    "reportlab==5.1.0",
     "matplotlib==3.11.2",
     "pillow==13.0.0",
 ]
